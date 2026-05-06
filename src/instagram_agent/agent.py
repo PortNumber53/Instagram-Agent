@@ -111,11 +111,19 @@ class InstagramAgent:
         in_reasoning = False
 
         for chunk in response:
-            delta = chunk.choices[0].delta
-            if not delta.content:
+            # Some models emit chunks with empty choices (e.g. usage chunks,
+            # role-only chunks at stream start). Guard against IndexError.
+            if not chunk.choices:
                 continue
 
-            token = delta.content
+            delta = chunk.choices[0].delta
+
+            # delta.content may be None on role-only or finish_reason chunks
+            content = getattr(delta, "content", None)
+            if not content:
+                continue
+
+            token = content
 
             # Track reasoning tags for display
             if show_reasoning:
