@@ -99,7 +99,7 @@ instagram-agent post "SaaS product launch" --reasoning
 
 | Flag | Description |
 |------|-------------|
-| `--model <name>` | NVIDIA NIM model (default: `meta/llama-3.3-70b-instruct`) |
+| `--model <name>` | NVIDIA NIM model (default: `z-ai/glm-5.1`) |
 | `--api-key <key>` | Override API key from config |
 | `--reasoning` | Show chain-of-thought reasoning before answers |
 

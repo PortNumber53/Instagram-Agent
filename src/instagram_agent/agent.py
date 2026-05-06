@@ -17,7 +17,7 @@ from openai import OpenAI
 from instagram_agent.config import get_nvidia_api_key
 
 # Default NVIDIA NIM model
-DEFAULT_MODEL = "meta/llama-3.3-70b-instruct"
+DEFAULT_MODEL = "z-ai/glm-5.1"
 
 # NVIDIA NIM base URL
 NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
