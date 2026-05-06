@@ -1,4 +1,7 @@
-"""Core agent module — connects to NVIDIA NIM API with streaming and reasoning."""
+"""Core agent module — connects to NVIDIA NIM API with streaming and reasoning.
+
+Also provides Instagram publishing via the Facebook Graph API.
+"""
 
 import json
 import os
@@ -14,7 +17,7 @@ if _src_dir not in sys.path:
 
 from openai import OpenAI
 
-from instagram_agent.config import get_nvidia_api_key
+from instagram_agent.config import get_nvidia_api_key, get_ig_access_token, get_ig_account_id
 
 # Default NVIDIA NIM model
 DEFAULT_MODEL = "z-ai/glm-5.1"
@@ -26,7 +29,8 @@ NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
 class InstagramAgent:
     """An AI agent that generates Instagram content using NVIDIA NIM.
 
-    Supports streaming output with optional chain-of-thought reasoning.
+    Supports streaming output with optional chain-of-thought reasoning,
+    and publishing directly to Instagram via the Facebook Graph API.
     """
 
     def __init__(
@@ -165,6 +169,7 @@ class InstagramAgent:
         style: str = "professional",
         include_hashtags: bool = True,
         show_reasoning: bool = False,
+        stream: bool = True,
     ) -> str:
         """Generate an Instagram post about a topic.
 
@@ -173,6 +178,7 @@ class InstagramAgent:
             style: Content style — professional, casual, funny, inspirational, etc.
             include_hashtags: Whether to include hashtag suggestions.
             show_reasoning: Show the AI's reasoning process.
+            stream: If True, stream output to stdout.
 
         Returns:
             Generated post content.
@@ -183,9 +189,12 @@ class InstagramAgent:
         )
         if include_hashtags:
             prompt += "Include 10-15 relevant hashtags.\n"
-        prompt += "Format the caption with line breaks for readability."
+        prompt += (
+            "Format the caption with line breaks for readability.\n"
+            "IMPORTANT: Return ONLY the caption text, no extra commentary."
+        )
 
-        return self.chat(prompt, stream=True, show_reasoning=show_reasoning)
+        return self.chat(prompt, stream=stream, show_reasoning=show_reasoning)
 
     def generate_caption(
         self,
@@ -265,3 +274,217 @@ class InstagramAgent:
         )
 
         return self.chat(prompt, stream=True, show_reasoning=show_reasoning)
+
+    # ──────────────────────────────────────────────────────────────────
+    # Instagram publishing via Facebook Graph API
+    # ──────────────────────────────────────────────────────────────────
+
+    def publish_post(
+        self,
+        image_url: str,
+        topic: str,
+        style: str = "professional",
+        include_hashtags: bool = True,
+        dry_run: bool = False,
+        show_reasoning: bool = False,
+    ) -> dict:
+        """Generate AI content for a topic, then publish it to Instagram.
+
+        This combines content generation with API publishing:
+        1. Generate a caption using AI
+        2. Create a media container on Instagram
+        3. Wait for processing
+        4. Publish the container
+
+        Args:
+            image_url: Publicly accessible URL of the image to post.
+            topic: What the post should be about (drives AI caption generation).
+            style: Content style — professional, casual, funny, etc.
+            include_hashtags: Whether to include hashtags in the caption.
+            dry_run: If True, generate the caption but do NOT publish.
+            show_reasoning: Show the AI's reasoning process.
+
+        Returns:
+            dict with keys:
+            - caption: The generated caption text
+            - container_id: Media container ID (None if dry_run)
+            - media_id: Published media ID (None if dry_run or not yet published)
+            - dry_run: Whether this was a dry run
+        """
+        from instagram_agent.instagram import InstagramClient
+
+        # 1. Generate the caption (non-streaming so we capture the full text)
+        print("📝 Generating caption...")
+        caption = self.generate_post(
+            topic=topic,
+            style=style,
+            include_hashtags=include_hashtags,
+            show_reasoning=show_reasoning,
+            stream=False,
+        )
+
+        # Clean up any surrounding quotes the model might add
+        caption = caption.strip().strip('"').strip("'")
+
+        print(f"\n{'='*50}")
+        print(f"Generated caption:\n{caption}")
+        print(f"{'='*50}\n")
+
+        if dry_run:
+            print("🏁 Dry run — skipping publish.")
+            return {
+                "caption": caption,
+                "container_id": None,
+                "media_id": None,
+                "dry_run": True,
+            }
+
+        # 2. Create the Instagram client and publish
+        print("📤 Publishing to Instagram...")
+        client = InstagramClient()
+
+        container_id = client.create_image_container(
+            image_url=image_url,
+            caption=caption,
+        )
+
+        client.wait_for_container(container_id)
+
+        result = client.publish_media(container_id)
+
+        return {
+            "caption": caption,
+            "container_id": container_id,
+            "media_id": result.get("id"),
+            "dry_run": False,
+        }
+
+    def publish_carousel(
+        self,
+        image_urls: list[str],
+        topic: str,
+        style: str = "professional",
+        include_hashtags: bool = True,
+        dry_run: bool = False,
+        show_reasoning: bool = False,
+    ) -> dict:
+        """Generate AI content then publish a carousel post to Instagram.
+
+        Args:
+            image_urls: List of publicly accessible image URLs (2-10 images).
+            topic: What the post should be about.
+            style: Content style.
+            include_hashtags: Whether to include hashtags.
+            dry_run: If True, generate the caption but do NOT publish.
+            show_reasoning: Show the AI's reasoning process.
+
+        Returns:
+            dict with caption, container_id, media_id, dry_run.
+        """
+        from instagram_agent.instagram import InstagramClient
+
+        print("📝 Generating caption...")
+        caption = self.generate_post(
+            topic=topic,
+            style=style,
+            include_hashtags=include_hashtags,
+            show_reasoning=show_reasoning,
+            stream=False,
+        )
+        caption = caption.strip().strip('"').strip("'")
+
+        print(f"\n{'='*50}")
+        print(f"Generated caption:\n{caption}")
+        print(f"{'='*50}\n")
+
+        if dry_run:
+            print("🏁 Dry run — skipping publish.")
+            return {
+                "caption": caption,
+                "container_id": None,
+                "media_id": None,
+                "dry_run": True,
+            }
+
+        print("📤 Publishing carousel to Instagram...")
+        client = InstagramClient()
+
+        container_id = client.create_carousel_container(
+            image_urls=image_urls,
+            caption=caption,
+        )
+
+        client.wait_for_container(container_id)
+        result = client.publish_media(container_id)
+
+        return {
+            "caption": caption,
+            "container_id": container_id,
+            "media_id": result.get("id"),
+            "dry_run": False,
+        }
+
+    def publish_reel(
+        self,
+        video_url: str,
+        topic: str,
+        style: str = "professional",
+        include_hashtags: bool = True,
+        dry_run: bool = False,
+        show_reasoning: bool = False,
+    ) -> dict:
+        """Generate AI content then publish a Reel to Instagram.
+
+        Args:
+            video_url: Publicly accessible URL of the video (MP4, 3-90s).
+            topic: What the reel should be about.
+            style: Content style.
+            include_hashtags: Whether to include hashtags.
+            dry_run: If True, generate the caption but do NOT publish.
+            show_reasoning: Show the AI's reasoning process.
+
+        Returns:
+            dict with caption, container_id, media_id, dry_run.
+        """
+        from instagram_agent.instagram import InstagramClient
+
+        print("📝 Generating caption...")
+        caption = self.generate_post(
+            topic=topic,
+            style=style,
+            include_hashtags=include_hashtags,
+            show_reasoning=show_reasoning,
+            stream=False,
+        )
+        caption = caption.strip().strip('"').strip("'")
+
+        print(f"\n{'='*50}")
+        print(f"Generated caption:\n{caption}")
+        print(f"{'='*50}\n")
+
+        if dry_run:
+            print("🏁 Dry run — skipping publish.")
+            return {
+                "caption": caption,
+                "container_id": None,
+                "media_id": None,
+                "dry_run": True,
+            }
+
+        print("📤 Publishing Reel to Instagram...")
+        client = InstagramClient()
+
+        container_id = client.create_reel_container(
+            video_url=video_url,
+            caption=caption,
+        )
+
+        client.wait_for_container(container_id, timeout=600)  # Videos take longer
+        result = client.publish_media(container_id)
+
+        return {
+            "caption": caption,
+            "container_id": container_id,
+            "media_id": result.get("id"),
+            "dry_run": False,
+        }

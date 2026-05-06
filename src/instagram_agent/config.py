@@ -82,3 +82,41 @@ def get(key: str, default: Optional[str] = None) -> Optional[str]:
     if value:
         return value
     return default
+
+
+# ── Instagram / Facebook OAuth config ──────────────────────────────────
+
+def get_fb_app_id() -> Optional[str]:
+    """Get the Facebook App ID from env or config.ini."""
+    return get("FB_APP_ID")
+
+
+def get_fb_app_secret() -> Optional[str]:
+    """Get the Facebook App Secret from env or config.ini."""
+    return get("FB_APP_SECRET")
+
+
+def get_ig_access_token() -> Optional[str]:
+    """Get the stored Instagram long-lived access token."""
+    return get("IG_ACCESS_TOKEN")
+
+
+def get_ig_account_id() -> Optional[str]:
+    """Get the Instagram Business Account ID."""
+    return get("IG_ACCOUNT_ID")
+
+
+def save_token_to_config(key: str, value: str) -> None:
+    """Persist a key=value pair into ~/.config/instagram-agent/config.ini.
+
+    Creates the file and [default] section if they don't exist.
+    """
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    parser = configparser.ConfigParser()
+    if CONFIG_FILE.exists():
+        parser.read(CONFIG_FILE)
+    if not parser.has_section("default"):
+        parser.add_section("default")
+    parser.set("default", key, value)
+    with open(CONFIG_FILE, "w") as f:
+        parser.write(f)
