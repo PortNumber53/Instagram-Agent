@@ -49,6 +49,19 @@ cp config.ini.example ~/.config/instagram-agent/config.ini
 
 ### 3. Run
 
+You can run the agent in three ways:
+
+```bash
+# After pip install -e .  (recommended)
+instagram-agent chat "What are trending Instagram formats in 2025?"
+
+# Or as a Python module
+python -m instagram_agent chat "What are trending Instagram formats in 2025?"
+
+# Or directly
+python src/instagram_agent/cli.py chat "What are trending Instagram formats in 2025?"
+```
+
 ```bash
 # Interactive chat
 instagram-agent chat

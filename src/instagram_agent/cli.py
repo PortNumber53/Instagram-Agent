@@ -2,6 +2,14 @@
 
 import argparse
 import sys
+from pathlib import Path
+
+# Ensure the package root (src/) is on sys.path so relative imports work
+# when running this file directly: python src/instagram_agent/cli.py
+_src_dir = str(Path(__file__).resolve().parent.parent)
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 from instagram_agent.agent import InstagramAgent, DEFAULT_MODEL
 from instagram_agent.config import get_nvidia_api_key, CONFIG_FILE
 
@@ -59,7 +67,7 @@ def main():
     try:
         agent = InstagramAgent(
             model=args.model,
-            api_key=args.api_key,
+            api_key=args.api_key if args.api_key else None,
         )
     except SystemExit:
         return 1

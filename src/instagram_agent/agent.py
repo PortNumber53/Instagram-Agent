@@ -1,8 +1,16 @@
 """Core agent module — connects to NVIDIA NIM API with streaming and reasoning."""
 
 import json
+import os
 import sys
+from pathlib import Path
 from typing import Optional
+
+# Ensure the package root (src/) is on sys.path so relative imports work
+# when running this file directly: python src/instagram_agent/agent.py
+_src_dir = str(Path(__file__).resolve().parent.parent)
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
 from openai import OpenAI
 
