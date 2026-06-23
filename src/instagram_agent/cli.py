@@ -101,6 +101,18 @@ def main():
     # ── account ──
     account_parser = subparsers.add_parser("account", help="Show Instagram account info")
 
+    # ── generate image ──
+    image_parser = subparsers.add_parser("image", help="Generate an image from a text prompt")
+    image_parser.add_argument("prompt", help="Text prompt for image generation")
+    image_parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
+    image_parser.add_argument("--steps", type=int, default=4, help="Number of inference steps (default: 4)")
+    image_parser.add_argument("--height", type=int, default=1024, help="Height of the image in pixels (default: 1024)")
+    image_parser.add_argument("--width", type=int, default=1024, help="Width of the image in pixels (default: 1024)")
+    image_parser.add_argument("--guidance", type=float, default=4.0, help="Guidance scale (default: 4.0)")
+    image_parser.add_argument("--output-dir", type=str, default=None, help="Directory to save the image (default: current directory)")
+    image_parser.add_argument("--filename", type=str, default=None, help="Filename for the saved image (default: auto-generated)")
+    image_parser.add_argument("--reasoning", action="store_true", help="Show reasoning process")
+
     # ── global options ──
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"NIM model (default: {DEFAULT_MODEL})")
     parser.add_argument("--api-key", default=None, help="NVIDIA API key (overrides config/env)")
@@ -169,6 +181,19 @@ def main():
 
     elif args.command == "publish":
         return _cmd_publish(agent, args, show_reasoning)
+
+    elif args.command == "image":
+        agent.generate_image(
+            prompt=args.prompt,
+            seed=args.seed,
+            num_inference_steps=args.steps,
+            height=args.height,
+            width=args.width,
+            guidance=args.guidance,
+            output_dir=args.output_dir,
+            filename=args.filename,
+            show_reasoning=show_reasoning,
+        )
 
     else:
         # No subcommand → print help

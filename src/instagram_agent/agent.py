@@ -18,6 +18,7 @@ if _src_dir not in sys.path:
 from openai import OpenAI
 
 from instagram_agent.config import get_nvidia_api_key, get_ig_access_token, get_ig_account_id
+from instagram_agent.image_gen.mflux_generator import MFluxGenerator
 
 # Default NVIDIA NIM model
 DEFAULT_MODEL = "z-ai/glm-5.1"
@@ -47,6 +48,9 @@ class InstagramAgent:
             base_url=NIM_BASE_URL,
             api_key=self.api_key,
         )
+        
+        # Initialize image generator
+        self.image_generator = MFluxGenerator()
 
     @staticmethod
     def _default_system_prompt() -> str:
@@ -488,3 +492,53 @@ class InstagramAgent:
             "media_id": result.get("id"),
             "dry_run": False,
         }
+
+    def generate_image(
+        self,
+        prompt: str,
+        seed: Optional[int] = None,
+        num_inference_steps: int = 4,
+        height: int = 1024,
+        width: int = 1024,
+        guidance: float = 4.0,
+        output_dir: Optional[str] = None,
+        filename: Optional[str] = None,
+        show_reasoning: bool = False,
+    ) -> str:
+        """Generate an image from a text prompt using MFlux.
+
+        Args:
+            prompt: The text prompt to generate the image from.
+            seed: Random seed for reproducibility. If None, a random seed is used.
+            num_inference_steps: Number of denoising steps (default: 4 for schnell).
+            height: Height of the generated image in pixels (default: 1024).
+            width: Width of the generated image in pixels (default: 1024).
+            guidance: Guidance scale for generation (default: 4.0).
+            output_dir: Directory to save the image. If None, uses current directory.
+            filename: Filename for the saved image. If None, a name is generated.
+            show_reasoning: Show the reasoning process for image generation.
+
+        Returns:
+            Path to the saved image file as a string.
+        """
+        if show_reasoning:
+            print(f"🎨 Generating image with prompt: {prompt}")
+            print(f"   Seed: {seed or 'random'}")
+            print(f"   Steps: {num_inference_steps}")
+            print(f"   Size: {width}x{height}")
+
+        image_path = self.image_generator.generate_image(
+            prompt=prompt,
+            seed=seed,
+            num_inference_steps=num_inference_steps,
+            height=height,
+            width=width,
+            guidance=guidance,
+            output_dir=output_dir,
+            filename=filename,
+        )
+
+        if show_reasoning:
+            print(f"✅ Image saved to: {image_path}")
+
+        return str(image_path)
