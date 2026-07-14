@@ -12,13 +12,13 @@ if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
 from instagram_agent.agent import InstagramAgent, DEFAULT_MODEL
-from instagram_agent.config import get_nvidia_api_key, CONFIG_FILE
+from instagram_agent.config import CONFIG_FILE
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="instagram-agent",
-        description="Instagram content agent powered by NVIDIA NIM with direct publishing",
+        description="Instagram content agent powered by FreeLLMAPI with direct publishing",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -114,8 +114,8 @@ def main():
     image_parser.add_argument("--reasoning", action="store_true", help="Show reasoning process")
 
     # ── global options ──
-    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"NIM model (default: {DEFAULT_MODEL})")
-    parser.add_argument("--api-key", default=None, help="NVIDIA API key (overrides config/env)")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"LLM model (default: {DEFAULT_MODEL})")
+    parser.add_argument("--api-key", default=None, help="LLM API key (overrides config/env)")
     parser.add_argument("--reasoning", action="store_true", help="Show reasoning (global flag)")
 
     args = parser.parse_args()

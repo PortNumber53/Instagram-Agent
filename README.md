@@ -1,10 +1,10 @@
 # Instagram-Agent
 
-An Instagram Agent powered by NVIDIA NIM API to generate content and publish directly to Instagram via the Facebook Graph API. Supports streaming output with chain-of-thought reasoning.
+An Instagram Agent powered by FreeLLMAPI to generate content and publish directly to Instagram via the Facebook Graph API. Supports streaming output with chain-of-thought reasoning.
 
 ## Features
 
-- 🤖 **NVIDIA NIM Integration** — Uses NVIDIA's hosted LLM models via OpenAI-compatible API
+- 🤖 **FreeLLMAPI Integration** — Uses FreeLLMAPI's OpenAI-compatible endpoint with auto model selection
 - 📸 **Content Generation** — Generate posts, captions, hashtags, and full strategies
 - 🧠 **Reasoning Mode** — Show the AI's step-by-step thinking before the answer
 - ⚡ **Streaming Output** — Tokens appear in real-time as they're generated
@@ -23,25 +23,31 @@ cd Instagram-Agent
 pip install -e .
 ```
 
-### 2. Configure your NVIDIA API Key
+### 2. Configure your FreeLLMAPI Key
 
-Get a key from [https://build.nvidia.com/](https://build.nvidia.com/). Then set it via one of:
+Set your FreeLLMAPI credentials via one of:
 
-**Option A: Environment variable**
+**Option A: Environment variables**
 ```bash
-export NVIDIA_API_KEY=nvapi-xxxxx
+export LLM_API_KEY=your_api_key
+export LLM_BASE_URL=http://localhost:3001/v1
+export LLM_MODEL=auto
 ```
 
 **Option B: `.env` file** (in project root)
 ```bash
 cp .env.example .env
-# Edit .env with your key
+# Edit .env with your key and settings
 ```
 
 **Option C: Config file** (`~/.config/instagram-agent/config.ini`)
 ```ini
 [default]
-NVIDIA_API_KEY=nvapi-xxxxx
+LLM_API_KEY=your_api_key
+LLM_BASE_URL=http://localhost:3001/v1
+LLM_MODEL=auto
+LLM_PROVIDER=custom
+LLM_API_MODE=chat_completions
 ```
 
 You can copy the example:
@@ -184,7 +190,7 @@ instagram-agent insights --account --period week
 
 | Flag | Description |
 |------|-------------|
-| `--model <name>` | NVIDIA NIM model (default: `z-ai/glm-5.1`) |
+| `--model <name>` | LLM model (default: `auto`) |
 | `--api-key <key>` | Override API key from config |
 | `--reasoning` | Show chain-of-thought reasoning before answers |
 
@@ -202,7 +208,7 @@ instagram-agent insights --account --period week
 
 Settings are loaded in this order (highest priority first):
 
-1. **Environment variables** — `export NVIDIA_API_KEY=nvapi-xxxxx`
+1. **Environment variables** — `export LLM_API_KEY=your_api_key`
 2. **`.env` file** — In the project root directory
 3. **`config.ini`** — At `~/.config/instagram-agent/config.ini` with `[default]` section
 
@@ -210,7 +216,11 @@ Settings are loaded in this order (highest priority first):
 
 | Variable | Description | Required For |
 |----------|-------------|-------------|
-| `NVIDIA_API_KEY` | NVIDIA NIM API key | All commands |
+| `LLM_API_KEY` | FreeLLMAPI key | All commands |
+| `LLM_BASE_URL` | FreeLLMAPI base URL (default: `http://localhost:3001/v1`) | All commands |
+| `LLM_MODEL` | Model name (default: `auto`) | All commands |
+| `LLM_PROVIDER` | Provider type (default: `custom`) | All commands |
+| `LLM_API_MODE` | API mode (default: `chat_completions`) | All commands |
 | `FB_APP_ID` | Facebook Developer App ID | `auth` |
 | `FB_APP_SECRET` | Facebook Developer App Secret | `auth`, `auth --refresh` |
 | `IG_ACCESS_TOKEN` | Instagram long-lived access token | `publish`, `account`, `insights` |
@@ -224,7 +234,7 @@ Settings are loaded in this order (highest priority first):
 Instagram-Agent/
 ├── src/instagram_agent/
 │   ├── __init__.py     # Package metadata
-│   ├── agent.py        # Core agent with NIM + publishing methods
+│   ├── agent.py        # Core agent with FreeLLMAPI + publishing methods
 │   ├── cli.py          # CLI entry point with subcommands
 │   ├── config.py       # Multi-source config loader + OAuth fields
 │   ├── oauth.py        # Instagram/Facebook OAuth 2.0 flow

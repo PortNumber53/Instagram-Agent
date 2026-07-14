@@ -1,6 +1,10 @@
 [default]
-# NVIDIA NIM API Key (get from https://build.nvidia.com/)
-NVIDIA_API_KEY=nvapi-Tf-XSF.....
+# FreeLLMAPI configuration
+LLM_API_KEY=your_api_key
+LLM_BASE_URL=http://localhost:3001/v1
+LLM_MODEL=auto
+LLM_PROVIDER=custom
+LLM_API_MODE=chat_completions
 
 # Facebook App credentials for Instagram Graph API
 # Get these from https://developers.facebook.com/apps/

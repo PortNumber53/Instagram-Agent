@@ -35,36 +35,49 @@ def _get_from_config_ini(key: str) -> Optional[str]:
     return parser.get("default", key, fallback=None)
 
 
-def get_nvidia_api_key() -> str:
-    """Get the NVIDIA API key from env, .env, or config.ini.
+def get_llm_api_key() -> str:
+    """Get the LLM API key from env, .env, or config.ini.
 
     Priority:
-      1. NVIDIA_API_KEY environment variable
+      1. LLM_API_KEY environment variable
       2. .env file (already loaded by dotenv at import time)
       3. ~/.config/instagram-agent/config.ini [default] section
 
     Raises:
         SystemExit: If no API key is found in any source.
     """
-    # 1. Check environment (includes .env loaded by dotenv)
-    key = os.environ.get("NVIDIA_API_KEY")
+    key = get("LLM_API_KEY")
     if key:
         return key
 
-    # 2. Check config.ini
-    key = _get_from_config_ini("NVIDIA_API_KEY")
-    if key:
-        return key
-
-    # Not found anywhere
     print(
-        "ERROR: NVIDIA_API_KEY not found.\n"
+        "ERROR: LLM_API_KEY not found.\n"
         "Set it via one of:\n"
-        "  1. Export: export NVIDIA_API_KEY=nvapi-xxxxx\n"
+        "  1. Export: export LLM_API_KEY=your_key\n"
         f"  2. .env file in project root\n"
         f"  3. config.ini at {CONFIG_FILE} with [default] section\n"
     )
     raise SystemExit(1)
+
+
+def get_llm_base_url() -> str:
+    """Get the LLM base URL. Defaults to http://localhost:3001/v1."""
+    return get("LLM_BASE_URL", "http://localhost:3001/v1")
+
+
+def get_llm_model() -> str:
+    """Get the LLM model name. Defaults to 'auto'."""
+    return get("LLM_MODEL", "auto")
+
+
+def get_llm_provider() -> str:
+    """Get the LLM provider. Defaults to 'custom'."""
+    return get("LLM_PROVIDER", "custom")
+
+
+def get_llm_api_mode() -> str:
+    """Get the LLM API mode. Defaults to 'chat_completions'."""
+    return get("LLM_API_MODE", "chat_completions")
 
 
 def get_config_dir() -> Path:

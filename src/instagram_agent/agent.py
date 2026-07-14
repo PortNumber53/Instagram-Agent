@@ -1,4 +1,4 @@
-"""Core agent module — connects to NVIDIA NIM API with streaming and reasoning.
+"""Core agent module — connects to FreeLLMAPI with streaming and reasoning.
 
 Also provides Instagram publishing via the Facebook Graph API.
 """
@@ -17,18 +17,18 @@ if _src_dir not in sys.path:
 
 from openai import OpenAI
 
-from instagram_agent.config import get_nvidia_api_key, get_ig_access_token, get_ig_account_id
+from instagram_agent.config import get_llm_api_key, get_llm_base_url, get_llm_model, get_ig_access_token, get_ig_account_id
 from instagram_agent.image_gen.mflux_generator import MFluxGenerator
 
-# Default NVIDIA NIM model
-DEFAULT_MODEL = "z-ai/glm-5.1"
+# Default model — 'auto' lets FreeLLMAPI pick the best available model
+DEFAULT_MODEL = "auto"
 
-# NVIDIA NIM base URL
-NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
+# Default base URL for FreeLLMAPI
+DEFAULT_BASE_URL = "http://localhost:3001/v1"
 
 
 class InstagramAgent:
-    """An AI agent that generates Instagram content using NVIDIA NIM.
+    """An AI agent that generates Instagram content using FreeLLMAPI.
 
     Supports streaming output with optional chain-of-thought reasoning,
     and publishing directly to Instagram via the Facebook Graph API.
@@ -38,14 +38,16 @@ class InstagramAgent:
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
         system_prompt: Optional[str] = None,
     ):
-        self.api_key = api_key or get_nvidia_api_key()
-        self.model = model or DEFAULT_MODEL
+        self.api_key = api_key or get_llm_api_key()
+        self.model = model or get_llm_model() or DEFAULT_MODEL
+        self.base_url = base_url or get_llm_base_url() or DEFAULT_BASE_URL
         self.system_prompt = system_prompt or self._default_system_prompt()
 
         self.client = OpenAI(
-            base_url=NIM_BASE_URL,
+            base_url=self.base_url,
             api_key=self.api_key,
         )
         

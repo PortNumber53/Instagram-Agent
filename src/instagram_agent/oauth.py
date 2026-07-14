@@ -38,7 +38,6 @@ FB_GRAPH_URL = "https://graph.facebook.com/v19.0"
 IG_SCOPES = [
     "instagram_basic",
     "instagram_content_publish",
-    "instagram_content_publish_media_collaborator_insights",
     "pages_show_list",
     "pages_read_engagement",
 ]

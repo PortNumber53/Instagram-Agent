@@ -13,11 +13,12 @@ dependencies = [
     "openai>=1.0.0",
     "python-dotenv>=1.0.0",
     "requests>=2.28.0",
+    "mflux>=0.13.0",
 ]
 
 [project.scripts]
 instagram-agent = "instagram_agent.cli:main"
 
 [tool.setuptools]
-packages = ["instagram_agent"]
+packages = ["instagram_agent", "instagram_agent.image_gen"]
 package-dir = {"" = "src"}
