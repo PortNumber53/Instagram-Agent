@@ -68,7 +68,7 @@ To publish directly to Instagram, you need a Facebook Developer App and an Insta
 3. **Facebook Developer App** — Create one at [https://developers.facebook.com/apps/](https://developers.facebook.com/apps/) with:
    - **Instagram Basic** product added
    - **Instagram Graph API** with `instagram_content_publish` permission
-   - **Facebook Login** configured with the OAuth redirect URI: `http://localhost:8765/`
+   - **Facebook Login** configured with the OAuth redirect URI: `http://localhost:21420/`
 
 #### Configure Facebook App Credentials
 
@@ -156,7 +156,50 @@ instagram-agent publish "Morning routine" --video https://example.com/reel.mp4
 instagram-agent publish "Quick recipe" --image https://example.com/food.jpg --style casual --no-hashtags
 ```
 
-### 6. View Account Info & Insights
+### 6. Run as an HTTP API Server (Reverse Proxy)
+
+Run the agent as a persistent HTTP server behind a reverse proxy:
+
+```bash
+# Basic usage (listens on 127.0.0.1:21420)
+instagram-agent serve
+
+# With custom OAuth redirect URI for reverse proxy
+instagram-agent serve --oauth-redirect-uri https://instagram14.hotel.portnumber53.com/auth/callback
+
+# Custom host and port
+instagram-agent serve --host 0.0.0.0 --port 8080
+```
+
+#### HTTP Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/` | Health check / service info |
+| `GET` | `/auth/url` | Get the OAuth authorization URL |
+| `GET` | `/auth/callback` | Handle OAuth callback from Facebook |
+| `POST` | `/auth/refresh` | Refresh the long-lived token |
+| `POST` | `/chat` | Chat with the agent (`{message, show_reasoning}`) |
+| `POST` | `/post` | Generate a post (`{topic, style, include_hashtags}`) |
+| `POST` | `/caption` | Generate a caption (`{description, tone}`) |
+| `POST` | `/hashtags` | Generate hashtags (`{description, count}`) |
+| `POST` | `/strategy` | Generate content strategy (`{niche, goals}`) |
+| `POST` | `/publish` | Publish to Instagram (`{topic, image_url, image_urls, video_url, style, dry_run}`) |
+| `POST` | `/image` | Generate an image (`{prompt, seed, steps, height, width, guidance}`) |
+| `GET` | `/account` | Get Instagram account info |
+| `GET` | `/insights` | Get insights (`?media_id=<id>` or `?account=true&period=day`) |
+
+#### OAuth via the Server
+
+When running behind a reverse proxy, set the OAuth redirect URI to your public URL:
+
+```bash
+instagram-agent serve --oauth-redirect-uri https://instagram14.hotel.portnumber53.com/auth/callback
+```
+
+Then visit `https://instagram14.hotel.portnumber53.com/auth/url` to get the OAuth link. After authorizing on Facebook, the callback will be handled by the server at `/auth/callback`.
+
+### 7. View Account Info & Insights
 
 ```bash
 # Show your Instagram account info
@@ -185,6 +228,7 @@ instagram-agent insights --account --period week
 | `publish <topic>` | Generate AI content and publish to Instagram |
 | `account` | Show Instagram account info |
 | `insights` | View post or account insights |
+| `serve` | Start HTTP API server (for reverse proxy / always-on) |
 
 ### Global Options
 
@@ -203,6 +247,7 @@ instagram-agent insights --account --period week
 - `auth`: `--port <port>`, `--no-browser`, `--refresh`
 - `publish`: `--image <url>`, `--images <url> ...`, `--video <url>`, `--style <style>`, `--no-hashtags`, `--dry-run`
 - `insights`: `--media-id <id>`, `--account`, `--period <period>`
+- `serve`: `--port <port>`, `--host <addr>`, `--oauth-redirect-uri <uri>`
 
 ## Configuration Priority
 

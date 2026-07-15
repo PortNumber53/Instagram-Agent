@@ -106,7 +106,7 @@ def generate_auth_url(app_id: str, redirect_uri: str, state: str = "ig-agent") -
 def start_oauth_flow(
     app_id: Optional[str] = None,
     app_secret: Optional[str] = None,
-    port: int = 8765,
+    port: int = 21420,
     open_browser: bool = True,
 ) -> dict:
     """Run the full OAuth flow end-to-end.

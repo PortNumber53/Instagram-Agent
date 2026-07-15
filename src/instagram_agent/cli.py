@@ -57,8 +57,8 @@ def main():
     # ── auth (OAuth flow) ──
     auth_parser = subparsers.add_parser("auth", help="Run Instagram/Facebook OAuth flow to get access token")
     auth_parser.add_argument(
-        "--port", type=int, default=8765,
-        help="Local port for OAuth callback (default: 8765)",
+        "--port", type=int, default=21420,
+        help="Local port for OAuth callback (default: 21420)",
     )
     auth_parser.add_argument(
         "--no-browser", action="store_true",
@@ -101,6 +101,16 @@ def main():
     # ── account ──
     account_parser = subparsers.add_parser("account", help="Show Instagram account info")
 
+    # ── serve (HTTP API server) ──
+    serve_parser = subparsers.add_parser("serve", help="Start HTTP API server (for reverse proxy / always-on)")
+    serve_parser.add_argument("--port", type=int, default=21420, help="Port to listen on (default: 21420)")
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)")
+    serve_parser.add_argument(
+        "--oauth-redirect-uri",
+        default=None,
+        help="OAuth redirect URI (for reverse proxy, e.g. https://instagram14.hotel.portnumber53.com/auth/callback)",
+    )
+
     # ── generate image ──
     image_parser = subparsers.add_parser("image", help="Generate an image from a text prompt")
     image_parser.add_argument("prompt", help="Text prompt for image generation")
@@ -132,6 +142,9 @@ def main():
 
     if args.command == "insights":
         return _cmd_insights(args)
+
+    if args.command == "serve":
+        return _cmd_serve(args)
 
     # ── Commands that need the AI agent ──
     try:
@@ -205,6 +218,18 @@ def main():
 
 
 # ── Subcommand implementations ──────────────────────────────────
+
+
+def _cmd_serve(args) -> int:
+    """Handle the 'serve' subcommand — start the HTTP API server."""
+    from instagram_agent.server import run_server
+
+    run_server(
+        port=args.port,
+        host=args.host,
+        oauth_redirect_uri=args.oauth_redirect_uri,
+    )
+    return 0
 
 
 def _cmd_auth(args) -> int:
