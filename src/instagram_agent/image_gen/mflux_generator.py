@@ -25,6 +25,11 @@ class MFluxGenerator:
 
     def _get_flux(self) -> Flux1:
         if self._flux is None:
+            from instagram_agent.config import get
+            hf_token = get("HF_TOKEN") or get("HUGGING_FACE_HUB_TOKEN")
+            if hf_token:
+                os.environ["HF_TOKEN"] = hf_token
+            os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
             print(f"Loading FLUX model '{self.model_name}' (quantize={self.quantize})...")
             self._flux = Flux1.from_name(
                 model_name=self.model_name,

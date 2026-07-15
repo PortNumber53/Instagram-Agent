@@ -324,6 +324,8 @@ def create_app(agent: Optional[InstagramAgent] = None, oauth_redirect_uri: Optio
             return jsonify(result)
         except SystemExit as e:
             return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     return app
 

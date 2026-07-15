@@ -266,6 +266,7 @@ Settings are loaded in this order (highest priority first):
 | `LLM_MODEL` | Model name (default: `auto`) | All commands |
 | `LLM_PROVIDER` | Provider type (default: `custom`) | All commands |
 | `LLM_API_MODE` | API mode (default: `chat_completions`) | All commands |
+| `HF_TOKEN` | HuggingFace token (for FLUX.1 model downloads) | `image` |
 | `FB_APP_ID` | Facebook Developer App ID | `auth` |
 | `FB_APP_SECRET` | Facebook Developer App Secret | `auth`, `auth --refresh` |
 | `IG_ACCESS_TOKEN` | Instagram long-lived access token | `publish`, `account`, `insights` |

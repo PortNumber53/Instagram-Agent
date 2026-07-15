@@ -6,6 +6,10 @@ LLM_MODEL=auto
 LLM_PROVIDER=custom
 LLM_API_MODE=chat_completions
 
+# HuggingFace token (required to download FLUX.1 models for image generation)
+# Get one at https://huggingface.co/settings/tokens
+HF_TOKEN=
+
 # Facebook App credentials for Instagram Graph API
 # Get these from https://developers.facebook.com/apps/
 FB_APP_ID=your_facebook_app_id

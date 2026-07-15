@@ -321,19 +321,35 @@ class InstagramClient:
         Returns:
             dict with metric name → value pairs.
         """
+        insights = {}
+
+        # Time-series metrics (return values over time)
+        series_metrics = "reach,follower_count"
         resp = requests.get(
             f"{FB_GRAPH_URL}/{self.account_id}/insights",
             params={
-                "metric": "impressions,reach,profile_views,follower_count",
+                "metric": series_metrics,
                 "period": period,
                 "access_token": self.access_token,
             },
         )
         resp.raise_for_status()
-        data = resp.json()
-
-        insights = {}
-        for item in data.get("data", []):
+        for item in resp.json().get("data", []):
             insights[item["name"]] = item["values"][-1]["value"] if item.get("values") else 0
+
+        # Total-value metrics (return a single aggregate value)
+        total_metrics = "profile_views,website_clicks,views"
+        resp = requests.get(
+            f"{FB_GRAPH_URL}/{self.account_id}/insights",
+            params={
+                "metric": total_metrics,
+                "period": period,
+                "metric_type": "total_value",
+                "access_token": self.access_token,
+            },
+        )
+        resp.raise_for_status()
+        for item in resp.json().get("data", []):
+            insights[item["name"]] = item.get("total_value", {}).get("value", 0)
 
         return insights
