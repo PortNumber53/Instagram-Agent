@@ -2,9 +2,13 @@
 
 import os
 import time
+from pathlib import Path
 from typing import Optional
 
+import mlx.core as mx
 from mflux.models.flux.variants.txt2img.flux import Flux1
+from mflux.models.common.config.model_config import ModelConfig
+from mflux.utils.generated_image import GeneratedImage
 
 
 class MFluxGenerator:
@@ -16,26 +20,15 @@ class MFluxGenerator:
 
     def __init__(
         self,
-        model_name: str = "schnell",
-        quantize: int = 8,
+        model_config: ModelConfig = ModelConfig.schnell(),
     ):
-        self.model_name = model_name
-        self.quantize = quantize
-        self._flux: Optional[Flux1] = None
+        """Initialize the MFluxGenerator with a specific model config.
 
-    def _get_flux(self) -> Flux1:
-        if self._flux is None:
-            from instagram_agent.config import get
-            hf_token = get("HF_TOKEN") or get("HUGGING_FACE_HUB_TOKEN")
-            if hf_token:
-                os.environ["HF_TOKEN"] = hf_token
-            os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
-            print(f"Loading FLUX model '{self.model_name}' (quantize={self.quantize})...")
-            self._flux = Flux1.from_name(
-                model_name=self.model_name,
-                quantize=self.quantize,
-            )
-        return self._flux
+        Args:
+            model_config: The model configuration to use (default: schnell).
+        """
+        self.model_config = model_config
+        self.flux = Flux1(model_config=model_config)
 
     def generate_image(
         self,
@@ -47,7 +40,7 @@ class MFluxGenerator:
         guidance: float = 4.0,
         output_dir: Optional[str] = None,
         filename: Optional[str] = None,
-    ) -> str:
+    ) -> Path:
         """Generate an image from a text prompt and save it to disk.
 
         Args:
@@ -64,32 +57,33 @@ class MFluxGenerator:
             Path to the saved image file.
         """
         if seed is None:
-            seed = int(time.time()) % (2**32)
+            seed = mx.random.randint(0, 2**32 - 1).item()
 
-        flux = self._get_flux()
+        # Set output directory
+        if output_dir is None:
+            output_dir = os.getcwd()
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
 
-        kwargs = dict(
+        # Generate filename if not provided
+        if filename is None:
+            filename = f"mflux_{seed}_{abs(hash(prompt)) % 10000:04d}.png"
+        elif not filename.endswith('.png'):
+            filename = filename + '.png'
+
+        full_path = output_path / filename
+
+        # Generate the image
+        generated_image: GeneratedImage = self.flux.generate_image(
             seed=seed,
             prompt=prompt,
             num_inference_steps=num_inference_steps,
             height=height,
             width=width,
+            guidance=guidance,
         )
 
-        if self.model_name != "schnell":
-            kwargs["guidance"] = guidance
+        # Save the image
+        generated_image.image.save(full_path)
 
-        image = flux.generate_image(**kwargs)
-
-        if filename is None:
-            filename = f"flux_{seed}_{int(time.time())}.png"
-        if not filename.endswith(".png"):
-            filename += ".png"
-
-        save_dir = output_dir or os.getcwd()
-        os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, filename)
-
-        image.save(path=save_path)
-
-        return save_path
+        return full_path

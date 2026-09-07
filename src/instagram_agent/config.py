@@ -17,15 +17,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-CONFIG_DIR = Path.home() / ".config" / "instagram-agent"
+CONFIG_DIR = Path.home() / ".config" / "Instagram-Agent"
 CONFIG_FILE = CONFIG_DIR / "config.ini"
 
 
 def _load_config_ini() -> configparser.ConfigParser:
-    """Load the config.ini file from ~/.config/instagram-agent/"""
+    """Load config.ini from /etc/Instagram-Agent/ and ~/.config/Instagram-Agent/."""
     parser = configparser.ConfigParser()
-    if CONFIG_FILE.exists():
-        parser.read(CONFIG_FILE)
+    paths = ["/etc/Instagram-Agent/config.ini", str(CONFIG_FILE)]
+    for p in paths:
+        if os.path.isfile(p):
+            parser.read(p)
     return parser
 
 
